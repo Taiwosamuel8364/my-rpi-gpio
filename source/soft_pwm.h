@@ -26,4 +26,5 @@ void pwm_set_duty_cycle(unsigned int gpio, float dutycycle);
 void pwm_set_frequency(unsigned int gpio, float freq);
 void pwm_start(unsigned int gpio);
 void pwm_stop(unsigned int gpio);
+void pwm_set_angle(unsigned int gpio, float angle);
 int pwm_exists(unsigned int gpio);

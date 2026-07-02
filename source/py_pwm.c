@@ -145,11 +145,30 @@ static void PWM_dealloc(PWMObject *self)
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
+// python method PWM.ChangeAngle(self, angle)
+static PyObject *PWM_ChangeAngle(PWMObject *self, PyObject *args)
+{
+    float angle = 0.0;
+    if (!PyArg_ParseTuple(args, "f", &angle))
+        return NULL;
+
+    if (angle < 0.0 || angle > 180.0)
+    {
+        PyErr_SetString(PyExc_ValueError, "angle must have a value from 0.0 to 180.0");
+        return NULL;
+    }
+
+    self->dutycycle = angle;  // store raw angle here for reference (optional)
+    pwm_set_angle(self->gpio, angle);
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef
 PWM_methods[] = {
    { "start", (PyCFunction)PWM_start, METH_VARARGS, "Start software PWM\ndutycycle - the duty cycle (0.0 to 100.0)" },
    { "ChangeDutyCycle", (PyCFunction)PWM_ChangeDutyCycle, METH_VARARGS, "Change the duty cycle\ndutycycle - between 0.0 and 100.0" },
    { "ChangeFrequency", (PyCFunction)PWM_ChangeFrequency, METH_VARARGS, "Change the frequency\nfrequency - frequency in Hz (freq > 1.0)" },
+   { "ChangeAngle", (PyCFunction)PWM_ChangeAngle, METH_VARARGS, "Change the servo angle\nangle - between 0.0 and 180.0" },
    { "stop", (PyCFunction)PWM_stop, METH_VARARGS, "Stop software PWM" },
    { NULL }
 };

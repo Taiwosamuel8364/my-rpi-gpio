@@ -213,6 +213,27 @@ void pwm_stop(unsigned int gpio)
     remove_pwm(gpio);
 }
 
+// Code to use angle for your pulse width modulation (pwm) signal.
+void pwm_set_angle(unsigned int gpio, float angle)
+{
+    float pulse_width_ms;
+    float dutycycle;
+
+    // clamp angle to a servo's physical range
+    if (angle < 0.0)
+        angle = 0.0;
+    if (angle > 180.0)
+        angle = 180.0;
+
+    // convert angle (0-180) to pulse width (1ms - 2ms)
+    pulse_width_ms = 1.0 + (angle / 180.0) * 1.0;
+
+    // convert pulse width to duty cycle, assuming 50Hz (20ms cycle)
+    dutycycle = (pulse_width_ms / 20.0) * 100.0;
+
+    pwm_set_duty_cycle(gpio, dutycycle);
+}
+
 // returns 1 if there is a PWM for this gpio, 0 otherwise
 int pwm_exists(unsigned int gpio)
 {
