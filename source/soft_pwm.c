@@ -232,7 +232,7 @@ void pwm_set_angle(unsigned int gpio, float angle)
     dutycycle = (pulse_width_ms / 20.0) * 100.0;
 
     pwm_set_duty_cycle(gpio, dutycycle);
-}Z
+}
 
 // returns 1 if there is a PWM for this gpio, 0 otherwise
 int pwm_exists(unsigned int gpio)
