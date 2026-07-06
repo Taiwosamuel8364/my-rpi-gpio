@@ -31,6 +31,7 @@ void set_high_event(int gpio, int enable);
 void set_low_event(int gpio, int enable);
 int eventdetected(int gpio);
 void cleanup(void);
+void step_motor(unsigned int pins[4], int steps, int direction, int delay_us);
 
 #define SETUP_OK           0
 #define SETUP_DEVMEM_FAIL  1

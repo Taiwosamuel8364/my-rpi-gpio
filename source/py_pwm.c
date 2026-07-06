@@ -163,6 +163,34 @@ static PyObject *PWM_ChangeAngle(PWMObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+// python function GPIO.step_motor(pins, steps, direction, delay_us)
+static PyObject *py_step_motor(PyObject *self, PyObject *args)
+{
+    PyObject *pin_list;
+    unsigned int pins[4];
+    int steps, direction, delay_us;
+    int i;
+
+    if (!PyArg_ParseTuple(args, "Oiii", &pin_list, &steps, &direction, &delay_us))
+        return NULL;
+
+    if (!PyList_Check(pin_list) || PyList_Size(pin_list) != 4)
+    {
+        PyErr_SetString(PyExc_ValueError, "pins must be a list of exactly 4 GPIO channel numbers");
+        return NULL;
+    }
+
+    for (i = 0; i < 4; i++)
+    {
+        int channel = (int)PyLong_AsLong(PyList_GetItem(pin_list, i));
+        if (get_gpio_number(channel, &pins[i]))
+            return NULL;
+    }
+
+    step_motor(pins, steps, direction, delay_us);
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef
 PWM_methods[] = {
    { "start", (PyCFunction)PWM_start, METH_VARARGS, "Start software PWM\ndutycycle - the duty cycle (0.0 to 100.0)" },
@@ -170,6 +198,7 @@ PWM_methods[] = {
    { "ChangeFrequency", (PyCFunction)PWM_ChangeFrequency, METH_VARARGS, "Change the frequency\nfrequency - frequency in Hz (freq > 1.0)" },
    { "ChangeAngle", (PyCFunction)PWM_ChangeAngle, METH_VARARGS, "Change the servo angle\nangle - between 0.0 and 180.0" },
    { "stop", (PyCFunction)PWM_stop, METH_VARARGS, "Stop software PWM" },
+   { "step_motor", (PyCFunction)py_step_motor, METH_VARARGS, "Step a 4-wire stepper motor\npins - list of 4 GPIO channels\nsteps - number of steps\ndirection - 1 forward, -1 reverse\ndelay_us - microseconds between steps" },
    { NULL }
 };
 

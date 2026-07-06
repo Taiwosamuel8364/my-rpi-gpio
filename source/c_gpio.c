@@ -27,6 +27,7 @@ SOFTWARE.
 #include <sys/mman.h>
 #include <string.h>
 #include "c_gpio.h"
+#include <unistd.h>
 
 #define BCM2708_PERI_BASE_DEFAULT   0x20000000
 #define BCM2709_PERI_BASE_DEFAULT   0x3f000000
@@ -174,6 +175,39 @@ int setup(void)
         return SETUP_MMAP_FAIL;
 
     return SETUP_OK;
+}
+
+// 8-step half-step sequence for a 4-wire stepper (e.g. 28BYJ-48)
+static int step_sequence[8][4] = {
+    {1,0,0,0},
+    {1,1,0,0},
+    {0,1,0,0},
+    {0,1,1,0},
+    {0,0,1,0},
+    {0,0,1,1},
+    {0,0,0,1},
+    {1,0,0,1}
+};
+
+void step_motor(unsigned int pins[4], int steps, int direction, int delay_us)
+{
+    int i, j, seq_index;
+
+    for (i = 0; i < steps; i++)
+    {
+        // direction: 1 = forward, -1 = reverse
+        if (direction >= 0)
+            seq_index = i % 8;
+        else
+            seq_index = 7 - (i % 8);
+
+        for (j = 0; j < 4; j++)
+        {
+            output_gpio(pins[j], step_sequence[seq_index][j]);
+        }
+
+        usleep(delay_us);
+    }
 }
 
 void clear_event_detect(int gpio)
