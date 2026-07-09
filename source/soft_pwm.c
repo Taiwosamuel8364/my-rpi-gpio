@@ -25,6 +25,11 @@ SOFTWARE.
 #include <time.h>
 #include "c_gpio.h"
 #include "soft_pwm.h"
+#include "<unistd.h>"
+
+
+#define MAX_GPIO 28
+
 
 struct pwm
 {
@@ -38,6 +43,11 @@ struct pwm
     struct pwm *next;
 };
 struct pwm *pwm_list = NULL;
+
+void delay_ms(unsigned int ms)
+{
+    unsleep(ms * 1000);
+}
 
 void remove_pwm(unsigned int gpio)
 {
@@ -213,6 +223,8 @@ void pwm_stop(unsigned int gpio)
     remove_pwm(gpio);
 }
 
+static float current_angle[MAX_GPIO] = {0};
+
 // Code to use angle for your pulse width modulation (pwm) signal.
 void pwm_set_angle(unsigned int gpio, float angle)
 {
@@ -232,6 +244,28 @@ void pwm_set_angle(unsigned int gpio, float angle)
     dutycycle = (pulse_width_ms / 20.0) * 100.0;
 
     pwm_set_duty_cycle(gpio, dutycycle);
+    current_angle[gpio] = angle;
+}
+
+// Sweeping to angle instead of rushing to a particular angle
+void pwm_sweep_to(unsigned int gpio, float target, unsigned int step_delay_ms)
+{
+    float step = 1.0;
+    float current = current_angle[gpio];
+
+    if (current < target) {
+        for (float a = current; a <= target; a =+ step){
+            pwm_set_angle(gpio, a);
+            delay_ms(step_delay_ms);
+        }
+    } else if (current > target) {
+        for (float a = current; a >= target; a -= step) {
+            pwm_set_angle(gpio, a);
+            delay_ms(step_delap_ms);
+        }
+    }
+
+    pwm_set_angle(gpio, target);
 }
 
 // returns 1 if there is a PWM for this gpio, 0 otherwise
