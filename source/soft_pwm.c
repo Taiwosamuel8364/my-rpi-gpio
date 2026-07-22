@@ -286,7 +286,7 @@ void pwm_sweep_to(unsigned int gpio, float target, unsigned int step_delay_ms)
     } else if (current > target) {
         for (float a = current; a >= target; a -= step) {
             pwm_set_angle(gpio, a);
-            delay_ms(step_delap_ms);
+            delay_ms(step_delay_ms);
         }
     }
 
