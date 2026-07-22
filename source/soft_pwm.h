@@ -28,3 +28,5 @@ void pwm_start(unsigned int gpio);
 void pwm_stop(unsigned int gpio);
 void pwm_set_angle(unsigned int gpio, float angle);
 int pwm_exists(unsigned int gpio);
+void pwm_sweep_to(unsigned int gpio, float target, unsigned int step_delay_ms);
+void delay_ms(unsigned int ms);

@@ -25,7 +25,8 @@ SOFTWARE.
 #include <time.h>
 #include "c_gpio.h"
 #include "soft_pwm.h"
-#include "<unistd.h>"
+#include <unistd.h>
+#include <sched.h>   
 
 
 #define MAX_GPIO 28
@@ -46,7 +47,7 @@ struct pwm *pwm_list = NULL;
 
 void delay_ms(unsigned int ms)
 {
-    unsleep(ms * 1000);
+    usleep(ms * 1000);
 }
 
 void remove_pwm(unsigned int gpio)
@@ -200,6 +201,24 @@ void pwm_set_frequency(unsigned int gpio, float freq)
     }
 }
 
+// void pwm_start(unsigned int gpio)
+// {
+//     pthread_t threads;
+//     struct pwm *p;
+
+//     if (((p = find_pwm(gpio)) == NULL) || p->running)
+//         return;
+
+//     p->running = 1;
+//     if (pthread_create(&threads, NULL, pwm_thread, (void *)p) != 0)
+//     {
+//         // btc fixme - error
+//         p->running = 0;
+//         return;
+//     }
+//     pthread_detach(threads);
+// }
+
 void pwm_start(unsigned int gpio)
 {
     pthread_t threads;
@@ -211,10 +230,16 @@ void pwm_start(unsigned int gpio)
     p->running = 1;
     if (pthread_create(&threads, NULL, pwm_thread, (void *)p) != 0)
     {
-        // btc fixme - error
         p->running = 0;
         return;
     }
+
+    // NEW: give this thread real-time priority so the OS scheduler
+    // doesn't interrupt it for other tasks (browser, editor, etc.)
+    struct sched_param param;
+    param.sched_priority = 50;  // 1-99 range for SCHED_FIFO
+    pthread_setschedparam(threads, SCHED_FIFO, &param);
+
     pthread_detach(threads);
 }
 
@@ -254,7 +279,7 @@ void pwm_sweep_to(unsigned int gpio, float target, unsigned int step_delay_ms)
     float current = current_angle[gpio];
 
     if (current < target) {
-        for (float a = current; a <= target; a =+ step){
+        for (float a = current; a <= target; a += step){
             pwm_set_angle(gpio, a);
             delay_ms(step_delay_ms);
         }
